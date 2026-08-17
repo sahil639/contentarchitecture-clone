@@ -26,11 +26,12 @@ const DURATION_MS = 520;
 const EASING = "cubic-bezier(0.23, 1, 0.32, 1)";
 
 /*
- * Per-character delay, so the word resolves left to right rather than as a
- * block. Capped so long strings do not trail far behind the pointer.
+ * Per-character delay, so the label resolves left to right rather than as a
+ * block. Uncapped, and spaces consume a slot like any other character. To
+ * restart the stagger partway through a label, split it into two components
+ * (which is what the connector in ConnectedOdometerButton does).
  */
-const STAGGER_MS = 18;
-const MAX_STAGGER_MS = 220;
+const STAGGER_MS = 28;
 
 /*
  * Decoys are picked from a seed rather than Math.random so the server and
@@ -45,7 +46,7 @@ function decoysFor(char: string, index: number): string[] {
 }
 
 function OdometerChar({ char, index }: { char: string; index: number }) {
-  const delay = Math.min(index * STAGGER_MS, MAX_STAGGER_MS);
+  const delay = index * STAGGER_MS;
   const column = [char, ...decoysFor(char, index), char];
 
   return (
@@ -81,26 +82,25 @@ function OdometerChar({ char, index }: { char: string; index: number }) {
 }
 
 export function OdometerText({ children }: { children: string }) {
-  /*
-   * Spaces are rendered as plain text so they never roll, and so they keep
-   * their normal collapsing behaviour between words.
-   */
-  let charIndex = 0;
-
   return (
     <>
       <span className="sr-only">{children}</span>
       <span aria-hidden="true" className="flex items-center">
-        {Array.from(children).map((char, i) => {
-          if (char === " ") {
-            return (
-              <span key={i} style={{ whiteSpace: "pre" }}>
-                {" "}
-              </span>
-            );
-          }
-          return <OdometerChar key={i} char={char} index={charIndex++} />;
-        })}
+        {Array.from(children).map((char, i) =>
+          char === " " ? (
+            /* Spaces hold their slot in the stagger but never roll. */
+            <span
+              key={i}
+              aria-hidden="true"
+              className="inline-block"
+              style={{ height: "1em", lineHeight: "1em" }}
+            >
+              {" "}
+            </span>
+          ) : (
+            <OdometerChar key={i} char={char} index={i} />
+          ),
+        )}
       </span>
     </>
   );
