@@ -1,26 +1,167 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/*
+ * Design tokens.
+ *
+ * The spacing base is 1px, so every numeric utility reads as a pixel value:
+ * `p-16` is 16px, `rounded-8` is 8px. Type sizes interpolate between a 375px
+ * and a 1600px viewport via --fluid-slope.
+ */
+@theme {
+  --spacing: 0.0625rem;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --color-black-deep: #000;
+  --color-black: #232323;
+  --color-dark-grey: #5b5a56;
+  --color-mid-grey: #cbcbcb;
+  --color-ghost-grey: #dedede;
+  --color-off-white: #f1eee7;
+  --color-white: #fff;
+  --color-accent: #ff9100;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  --radius-2: calc(var(--spacing) * 2);
+  --radius-4: calc(var(--spacing) * 4);
+  --radius-8: calc(var(--spacing) * 8);
+
+  --layout-min-w: 375;
+  --layout-max-w: 1600;
+  --fluid-min-w: var(--layout-min-w);
+  --fluid-max-w: var(--layout-max-w);
+
+  --text-caption-10: clamp(
+    calc(var(--spacing) * 12),
+    calc(var(--spacing) * 12) + (14 - 12) * var(--fluid-slope),
+    calc(var(--spacing) * 14)
+  );
+  --text-caption-10--line-height: 1.25;
+  --text-caption-20: clamp(
+    calc(var(--spacing) * 14),
+    calc(var(--spacing) * 14) + (16 - 14) * var(--fluid-slope),
+    calc(var(--spacing) * 16)
+  );
+  --text-caption-20--line-height: 1.25;
+
+  --text-body-10: clamp(
+    calc(var(--spacing) * 14),
+    calc(var(--spacing) * 14) + (16 - 14) * var(--fluid-slope),
+    calc(var(--spacing) * 16)
+  );
+  --text-body-10--line-height: 1.25;
+  --text-body-20: clamp(
+    calc(var(--spacing) * 14),
+    calc(var(--spacing) * 14) + (18 - 14) * var(--fluid-slope),
+    calc(var(--spacing) * 18)
+  );
+  --text-body-20--line-height: 1.25;
+  --text-body-30: clamp(
+    calc(var(--spacing) * 16),
+    calc(var(--spacing) * 16) + (24 - 16) * var(--fluid-slope),
+    calc(var(--spacing) * 24)
+  );
+  --text-body-30--line-height: 1.25;
+
+  --text-headline-10: clamp(
+    calc(var(--spacing) * 32),
+    calc(var(--spacing) * 32) + (48 - 32) * var(--fluid-slope),
+    calc(var(--spacing) * 48)
+  );
+  --text-headline-10--line-height: 1.1;
+
+  /* Headline 20 keeps its own slope: it only grows past a 1400px viewport. */
+  --text-headline-20: clamp(
+    calc(var(--spacing) * 40),
+    calc(var(--spacing) * 40) + (80 - 40) *
+      ((100vw - calc(var(--spacing) * 1400)) / (1920 - 1400)),
+    calc(var(--spacing) * 80)
+  );
+  --text-headline-20--line-height: 1;
+
+  --text-ui: calc(var(--spacing) * 12);
+  --text-ui--line-height: 1.25;
+
+  --animate-cursor-blink: cursorBlink 0.9s steps(1, end) infinite;
+  --animate-fade-in: fadeIn 0.4s ease-in-out;
+  --animate-hero-scroll-cue: heroScrollCue 1.4s steps(7, end) infinite;
+  --animate-minimap-scan: minimapScan 5s ease-in-out infinite;
+  --animate-minimap-scan-counter: minimapScanCounter 5s ease-in-out infinite;
+  --animate-status-ping: statusPing 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+
+  @keyframes cursorBlink {
+    0%,
+    49.9% {
+      opacity: 1;
+    }
+    50%,
+    100% {
+      opacity: 0;
+    }
+  }
+  @keyframes fadeIn {
+    0% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+  @keyframes heroScrollCue {
+    0% {
+      transform: translateY(-8px);
+    }
+    100% {
+      transform: translateY(48px);
+    }
+  }
+  @keyframes statusPing {
+    0% {
+      opacity: 0.5;
+      transform: scale(1);
+    }
+    75%,
+    100% {
+      opacity: 0;
+      transform: scale(2.6);
+    }
+  }
+  @keyframes minimapScan {
+    0% {
+      opacity: 1;
+      transform: translateY(-101%);
+    }
+    30% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    38%,
+    100% {
+      opacity: 0;
+      transform: translateY(0);
+    }
+  }
+  @keyframes minimapScanCounter {
+    0% {
+      transform: translateY(101%);
+    }
+    30%,
+    100% {
+      transform: translateY(0);
+    }
   }
 }
 
+:root {
+  --fluid-slope: calc(
+    (100vw - calc(var(--spacing) * var(--fluid-min-w))) /
+      (var(--fluid-max-w) - var(--fluid-min-w))
+  );
+  --ascii-transition-bg: var(--color-black-deep);
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-black-deep);
+  color: var(--color-off-white);
+  font-family: var(--font-sans);
 }
