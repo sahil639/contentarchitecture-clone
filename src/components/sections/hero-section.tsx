@@ -1,4 +1,5 @@
 import { FadeReveal, RiseReveal, STEP } from "@/components/motion/reveal";
+import { TextVortex } from "@/components/motion/text-vortex";
 import { SpecStrip } from "@/components/motion/spec-strip";
 import { SplitButton } from "@/components/ui/split-button";
 import { ScrollCue } from "@/components/ui/scroll-cue";
@@ -61,13 +62,9 @@ export function HeroSection({ nextSectionId }: { nextSectionId: string }) {
         </div>
       </div>
 
-      {/*
-       * Media panel. The reference leaves this empty server-side and fills it
-       * on the client, so its contents are still unknown — see the note in the
-       * hero README. Kept as a bare black panel until we know what belongs.
-       */}
-      <div className="relative overflow-hidden bg-black lg:col-span-6 lg:col-start-7 lg:aspect-auto">
-        <div className="absolute inset-0 size-full" />
+      {/* Media panel: the text tunnel, drawn client-side onto a canvas. */}
+      <div className="relative overflow-hidden bg-black-deep lg:col-span-6 lg:col-start-7 lg:aspect-auto">
+        <TextVortex className="absolute inset-0 size-full" />
       </div>
 
       <ScrollCue targetId={nextSectionId} />
