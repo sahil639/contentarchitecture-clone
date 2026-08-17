@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { OdometerText } from "@/components/motion/odometer-text";
 import { Marquee } from "@/components/ui/marquee";
+import { Panel } from "@/components/ui/panel";
 
 /*
  * Site header.
@@ -22,23 +23,31 @@ const NAV = [
 
 function Mark() {
   /*
-   * Concentric arcs, echoing the hero vortex at a glyph's scale.
+   * A fan of hatched strokes radiating from the lower-left, echoing the hero
+   * vortex at a glyph's scale. Drawn as arcs of increasing radius about a
+   * corner origin rather than as concentric rings about the centre.
    */
+  const RAYS = 9;
+
   return (
     <span
       aria-hidden="true"
-      className="flex size-32 shrink-0 items-center justify-center rounded-4 bg-off-white"
+      className="flex size-32 shrink-0 items-center justify-center rounded-4 bg-white/10"
     >
-      <svg viewBox="0 0 24 24" className="size-20" fill="none">
+      <svg viewBox="0 0 24 24" className="size-22" fill="none">
         <title>Mark</title>
-        {[3, 6, 9, 12].map((r) => (
-          <path
-            key={r}
-            d={`M ${12 - r} 20 A ${r} ${r} 0 0 1 ${12 + r} 20`}
-            stroke="#232323"
-            strokeWidth="1.6"
-          />
-        ))}
+        {Array.from({ length: RAYS }, (_, i) => {
+          const r = 3 + i * 2.4;
+          return (
+            <path
+              key={i}
+              d={`M 2 ${22 - r} A ${r} ${r} 0 0 1 ${2 + r} 22`}
+              stroke="rgba(241,238,231,0.85)"
+              strokeWidth="1.1"
+              strokeLinecap="round"
+            />
+          );
+        })}
       </svg>
     </span>
   );
@@ -47,12 +56,10 @@ function Mark() {
 export function SiteHeader() {
   return (
     <header className="pointer-events-none fixed inset-x-0 top-0 z-4 flex justify-start p-8 lg:justify-center lg:p-16">
-      <nav
-        aria-label="Primary"
-        /* w-fit so the pill hugs the nav row; the marquee below is clipped to that width. */
-        className="pointer-events-auto w-fit max-w-full overflow-hidden rounded-8 bg-black-deep shadow-lg ring ring-black-deep"
-      >
-        <div className="flex items-center gap-8 px-12 py-10 lg:gap-24 lg:px-16">
+      {/* w-fit so the pill hugs the nav row; the marquee below is clipped to that width. */}
+      <Panel className="pointer-events-auto w-fit max-w-full">
+        <nav aria-label="Primary">
+          <div className="flex items-center gap-12 px-12 py-8 lg:gap-28 lg:px-16">
           <Link href="/" aria-label="Home">
             <Mark />
           </Link>
@@ -75,12 +82,13 @@ export function SiteHeader() {
               </li>
             ))}
           </ul>
-        </div>
+          </div>
 
-        <div className="border-t border-white/10 py-6">
-          <Marquee>Now available with Astro</Marquee>
-        </div>
-      </nav>
+          <div className="border-t border-white/10 py-6">
+            <Marquee>Now available with Astro</Marquee>
+          </div>
+        </nav>
+      </Panel>
     </header>
   );
 }
