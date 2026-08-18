@@ -16,13 +16,21 @@ export function SplitButton({
   leading,
   trailing,
   ping = false,
+  tone = "dark",
 }: {
   href: string;
   leading: string;
   trailing: string;
   /** Accent dot in the top-right corner. */
   ping?: boolean;
+  /** "dark" for light backgrounds, "light" for dark ones. */
+  tone?: "dark" | "light";
 }) {
+  const skin =
+    tone === "dark"
+      ? "*:data-text:bg-black *:data-text:text-white *:data-connector:text-black"
+      : "*:data-text:bg-ghost-grey *:data-text:text-black *:data-connector:text-ghost-grey";
+
   return (
     <Link
       href={href}
@@ -32,7 +40,7 @@ export function SplitButton({
         "[--odometer-progress:0] motion-safe:hover:[--odometer-progress:1]",
         "*:data-text:inline-flex *:data-text:h-48 *:data-text:items-center",
         "*:data-text:rounded-8 *:data-text:px-20 lg:*:data-text:px-24",
-        "*:data-text:bg-black *:data-text:text-white *:data-connector:text-black",
+        skin,
       ].join(" ")}
     >
       <span data-text="true">
