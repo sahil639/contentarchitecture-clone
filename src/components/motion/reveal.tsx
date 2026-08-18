@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, useReducedMotion } from "motion/react";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 
 /*
  * Entrance reveals.
@@ -62,13 +62,22 @@ export function RiseReveal({
   className?: string;
 }) {
   const reduced = useReducedMotion();
+  /*
+   * The mask is only needed while the child is sliding up through it. Left in
+   * place afterwards it clips anything that overflows the child's box — the
+   * button's status dot and its shadow — so it is dropped once the wipe ends.
+   */
+  const [wiping, setWiping] = useState(!reduced);
 
   return (
-    <div className={`block w-full overflow-hidden ${className ?? ""}`}>
+    <div
+      className={`block w-full ${wiping ? "overflow-hidden" : ""} ${className ?? ""}`}
+    >
       <motion.div
         initial={reduced ? { opacity: 1, y: 0 } : { opacity: 0, y: "100%" }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: DURATION, delay, ease: EASE }}
+        onAnimationComplete={() => setWiping(false)}
       >
         {children}
       </motion.div>
