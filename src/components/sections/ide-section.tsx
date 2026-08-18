@@ -5,7 +5,7 @@ import { Panel } from "@/components/ui/panel";
 import { FileTree } from "@/components/ui/file-tree";
 import { IdeTerminal } from "@/components/ui/ide-terminal";
 import { REPO_TREE } from "@/content/repo-tree";
-import { REPO_FILES } from "@/content/repo-files";
+import { contentFor } from "@/content/repo-files";
 
 /*
  * IDE section.
@@ -19,7 +19,7 @@ import { REPO_FILES } from "@/content/repo-files";
  * coming back keeps whatever was typed. Nothing is written to disk.
  */
 
-const DEFAULT_PATH = "src/components/ui/connector.tsx";
+const DEFAULT_PATH = "README.md";
 
 function TopBar({
   showTerminal,
@@ -111,7 +111,8 @@ function Editor({
         {path}
       </p>
 
-      <div className="flex min-h-0 flex-1 overflow-auto">
+      {/* Editing surface sits a step darker than the chrome around it. */}
+      <div className="flex min-h-0 flex-1 overflow-auto bg-[#191919]">
         {/*
          * Gutter and textarea share the same type metrics and scroll together
          * inside one scroller, so numbers stay aligned with their lines.
@@ -152,7 +153,7 @@ export function IdeSection({ id }: { id: string }) {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  const value = edits[path] ?? REPO_FILES[path] ?? "";
+  const value = edits[path] ?? contentFor(path);
 
   return (
     <section

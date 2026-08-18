@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { REPO_TREE, flattenPaths, type TreeNode } from "@/content/repo-tree";
-import { REPO_FILES } from "@/content/repo-files";
+import { contentFor } from "@/content/repo-files";
 
 /*
  * IDE terminal.
@@ -69,12 +69,12 @@ function run(input: string, cwd: string): { output: string[]; cwd: string } {
     case "cat": {
       if (!arg) return { output: ["cat: missing operand"], cwd };
       const direct = cwd ? `${cwd}/${arg}` : arg;
-      const match =
-        REPO_FILES[direct] !== undefined
-          ? direct
-          : flattenPaths().find((p) => p.endsWith(`/${arg}`) || p === arg);
+      const all = flattenPaths();
+      const match = all.includes(direct)
+        ? direct
+        : all.find((p) => p.endsWith(`/${arg}`) || p === arg);
       if (!match) return { output: [`cat: ${arg}: no such file`], cwd };
-      return { output: REPO_FILES[match].split("\n").slice(0, 40), cwd };
+      return { output: contentFor(match).split("\n").slice(0, 40), cwd };
     }
     default:
       return { output: [`command not found: ${name}`], cwd };
