@@ -26,19 +26,24 @@ import { useEffect, useRef } from "react";
 
 const PHRASE = "THE CONTENT ARCHITECTURE";
 
-/* Ring count sets how tight the concentric spacing reads. */
-const RING_COUNT = 26;
+const RING_COUNT = 20;
 /*
  * Radii as a fraction of the panel's half-diagonal, so coverage holds at any
- * aspect. R_MIN is set so the innermost ring is still legible text around a
- * clear centre, rather than collapsing into unreadable mush.
+ * aspect. Rings are spaced linearly between the two, giving a constant gap
+ * from the centre out rather than the widening one a geometric series
+ * produces.
  */
-const R_MIN = 0.09;
-const R_MAX = 1.6;
+const R_MIN = 0.055;
+const R_MAX = 1.15;
 
-/* Font size as a fraction of ring radius; rings below the legible floor are dropped. */
-const FONT_RATIO = 0.068;
-const LEGIBLE_FLOOR_PX = 9;
+/*
+ * Font size, also as a fraction of the half-diagonal, ramping linearly from the
+ * innermost ring to the outermost. Text is near enough one size throughout —
+ * scaling it with radius instead would grow it geometrically and read as a
+ * tunnel rather than as flat concentric rules.
+ */
+const FONT_MIN_RATIO = 0.018;
+const FONT_MAX_RATIO = 0.027;
 
 /*
  * Dots bridging the arc between phrase repetitions. The run length grows toward
@@ -127,9 +132,9 @@ export function TextVortex({ className }: { className?: string }) {
       cx: number,
       cy: number,
       radius: number,
+      fontSize: number,
       ringIndex: number,
     ) => {
-      const fontSize = radius * FONT_RATIO;
       c.font = `${fontSize}px ${fontFamily}`;
 
       const dotPitch = fontSize * DOT_PITCH_EM;
@@ -234,12 +239,12 @@ export function TextVortex({ className }: { className?: string }) {
 
         const centre = layerSize / 2;
         const scale = Math.hypot(width, height) / 2;
-        const growth = R_MAX / R_MIN;
 
         for (let i = parity; i < RING_COUNT; i += 2) {
-          const radius = R_MIN * growth ** (i / RING_COUNT) * scale;
-          if (radius * FONT_RATIO < LEGIBLE_FLOOR_PX) continue;
-          drawRing(lc, centre, centre, radius, i);
+          const t = i / (RING_COUNT - 1);
+          const radius = (R_MIN + (R_MAX - R_MIN) * t) * scale;
+          const fontSize = (FONT_MIN_RATIO + (FONT_MAX_RATIO - FONT_MIN_RATIO) * t) * scale;
+          drawRing(lc, centre, centre, radius, fontSize, i);
         }
         layers[parity] = c;
       }
