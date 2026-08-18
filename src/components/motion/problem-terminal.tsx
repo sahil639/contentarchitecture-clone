@@ -2,16 +2,23 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTypewriter } from "@/components/motion/use-typewriter";
+import { Panel } from "@/components/ui/panel";
 
 /*
  * Problem terminal.
  *
  * A console listing the work a project repeats every time. Lines type in one
- * after another once the panel scrolls into view, with a block cursor on the
- * line currently being written, and close with a summary tally.
+ * after another once the panel scrolls into view, closing with a summary tally
+ * and a cursor that keeps blinking once the run is done.
  *
- * Rows are only rendered once their line has started, so the panel grows as the
- * list fills rather than reserving its final height up front.
+ * Every row reserves its finished size from the first frame by laying out an
+ * invisible copy of the full text, with the typed characters painted over it.
+ * Holding a bare line box is not enough: a row that wraps once complete would
+ * still grow the panel partway through the run.
+ *
+ * Body type is a fixed 14px rather than a fluid step. The rows are monospace
+ * and sized to sit on one line each, so letting the size grow with the viewport
+ * would wrap the longest of them at wide widths.
  */
 
 const CHAR_MS = 23;
@@ -59,7 +66,7 @@ export function ProblemTerminal({
   }, []);
 
   const stream = [...lines.map((l) => l.text), summary];
-  const { slice } = useTypewriter({
+  const { typed, total, slice } = useTypewriter({
     lines: stream,
     charMs: CHAR_MS,
     linePauseMs: LINE_PAUSE_MS,
@@ -69,48 +76,63 @@ export function ProblemTerminal({
 
   const state = slice();
   const summaryState = state[state.length - 1];
+  const finished = typed >= total;
 
   return (
-    <div
-      ref={ref}
-      className="w-full rounded-8 bg-black-deep p-16 shadow-lg ring-1 ring-white/12 lg:p-20"
-    >
-      <p className="font-mono text-ui uppercase tracking-wide text-dark-grey">
-        {title}
-      </p>
-
-      {/* The full list is exposed to assistive tech regardless of typing state. */}
-      <ol className="sr-only">
-        {lines.map((line) => (
-          <li key={line.number}>{line.text}</li>
-        ))}
-      </ol>
-
-      <div aria-hidden="true" className="mt-12 flex flex-col gap-2">
-        {lines.map((line, i) => {
-          const row = state[i];
-          if (!row.started) return null;
-          return (
-            <div
-              key={line.number}
-              className="flex gap-12 font-mono text-ui leading-relaxed"
-            >
-              <span className="shrink-0 text-dark-grey">{line.number}</span>
-              <span className="text-off-white">
-                {row.text}
-                {row.isActive && <Cursor />}
-              </span>
-            </div>
-          );
-        })}
-
-        {summaryState.started && (
-          <p className="mt-12 font-mono text-ui uppercase text-dark-grey">
-            {summaryState.text}
-            {summaryState.isActive && <Cursor />}
+    <div ref={ref}>
+      <Panel
+        frame="p-7 lg:p-10"
+        innerClassName="selection:bg-white selection:text-black"
+      >
+        <div className="px-16 pt-14 pb-16 lg:px-20 lg:pt-16 lg:pb-20">
+          <p className="font-mono text-[14px] uppercase tracking-wide text-dark-grey">
+            {title}
           </p>
-        )}
-      </div>
+          <hr className="mt-12 border-white/12" />
+
+          {/* The full list is exposed to assistive tech regardless of typing state. */}
+          <ol className="sr-only">
+            {lines.map((line) => (
+              <li key={line.number}>{line.text}</li>
+            ))}
+          </ol>
+
+          <div aria-hidden="true" className="mt-16 flex flex-col gap-2">
+            {lines.map((line, i) => {
+              const row = state[i];
+              return (
+                <div
+                  key={line.number}
+                  className="flex gap-16 font-mono text-[14px] leading-relaxed"
+                >
+                  <span
+                    className={`shrink-0 text-dark-grey ${row.started ? "" : "invisible"}`}
+                  >
+                    {line.number}
+                  </span>
+                  <span className="relative min-w-0 flex-1">
+                    {/* Reserves the finished height, wrapping included. */}
+                    <span className="invisible">{line.text}</span>
+                    <span className="absolute inset-0 text-off-white">
+                      {row.text}
+                      {row.isActive && <Cursor />}
+                    </span>
+                  </span>
+                </div>
+              );
+            })}
+
+            <p className="relative mt-16 font-mono text-[14px] leading-relaxed uppercase">
+              <span className="invisible">{summary}</span>
+              <span className="absolute inset-0 text-white">
+                {summaryState.text}
+                {/* Rests at the end of the run rather than disappearing with it. */}
+                {(summaryState.isActive || finished) && <Cursor />}
+              </span>
+            </p>
+          </div>
+        </div>
+      </Panel>
     </div>
   );
 }

@@ -25,7 +25,7 @@ const LINES: TerminalLine[] = [
   { number: "011", text: "Basic auth for staging environments" },
 ];
 
-const SUMMARY = "Estimated time lost: ~24 hours per project";
+const SUMMARY = "Estimated time lost: ~24 hours per project  (3 full days)";
 
 export function TextTerminalSection({ id }: { id: string }) {
   return (
