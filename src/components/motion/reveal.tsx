@@ -16,18 +16,18 @@ import type { ReactNode } from "react";
  * keeps the text rendered and measurable for layout and for screen readers
  * before the animation runs.
  *
- * TIMINGS ARE PROVISIONAL. The reference ships these elements in their initial
- * state with the animation driven from JS we have not observed running, so the
- * durations and the inter-element delay below are a considered guess. They are
- * collected here so a single edit retunes the whole hero once we have a
- * reference recording of page load.
+ * Timings are measured off the reference load capture: the copy begins a beat
+ * after the shell settles, and eyebrow through button resolve over about half a
+ * second in all.
  */
 
-const DURATION = 0.8;
+const DURATION = 0.55;
 const EASE = [0.23, 1, 0.32, 1] as const;
 
+/** Delay before the first element, once the shell is up. */
+export const LEAD = 0.3;
 /** Delay between consecutive hero elements. */
-export const STEP = 0.09;
+export const STEP = 0.13;
 
 export function FadeReveal({
   children,

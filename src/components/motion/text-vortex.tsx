@@ -45,6 +45,15 @@ const SPIN_DOWN = 1.15;
 const MAX_SPIN = 0.38;
 const MAX_ZOOM = 0.055;
 
+/*
+ * One-time entrance. The field expands out of the centre and fades up, then
+ * holds still until pressed. INTRO_ZOOM is just over half a ring cycle, so
+ * rings visibly travel outward without the sequence reading as a full loop.
+ */
+const INTRO_S = 1.35;
+const INTRO_ZOOM = 0.55;
+const INTRO_DELAY_S = 0.28;
+
 const IDLE_ALPHA = 0.62;
 const IDLE_DROPOUT = 0.06;
 const HELD_DROPOUT = 0.16;
@@ -89,6 +98,9 @@ export function TextVortex({ className }: { className?: string }) {
     let angle = 0;
     let zoom = 0;
     let dropoutClock = 0;
+    /* Entrance progress, 0..1, run once on mount. */
+    let intro = reduced ? 1 : 0;
+    let elapsed = 0;
 
     const resize = () => {
       const rect = canvas.getBoundingClientRect();
@@ -118,14 +130,16 @@ export function TextVortex({ className }: { className?: string }) {
 
       const bucket = Math.floor(dropoutClock * DROPOUT_HZ);
       const dropout = IDLE_DROPOUT + (HELD_DROPOUT - IDLE_DROPOUT) * power;
-      const brightness = IDLE_ALPHA + (1 - IDLE_ALPHA) * power;
+      /* Entrance dims and pulls the field inward, on top of the press drive. */
+      const brightness = (IDLE_ALPHA + (1 - IDLE_ALPHA) * power) * intro;
+      const introZoom = zoom - (1 - intro) * INTRO_ZOOM;
 
       ctx.fillStyle = "#f1eee7";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
 
       for (let i = 0; i < RING_COUNT; i++) {
-        const phase = (((i / RING_COUNT + zoom) % 1) + 1) % 1;
+        const phase = (((i / RING_COUNT + introZoom) % 1) + 1) % 1;
         const radius = R_MIN * growth ** phase * scale;
 
         const fontSize = radius * FONT_RATIO;
@@ -176,6 +190,13 @@ export function TextVortex({ className }: { className?: string }) {
       const dt = Math.min((now - last) / 1000, 0.05);
       last = now;
 
+      elapsed += dt;
+      if (intro < 1) {
+        const t = Math.max(0, (elapsed - INTRO_DELAY_S) / INTRO_S);
+        /* Ease-out cubic: quick expansion that settles rather than arriving flat. */
+        intro = t >= 1 ? 1 : 1 - (1 - t) ** 3;
+      }
+
       const target = heldRef.current ? 1 : 0;
       const rate = target > power ? SPIN_UP : SPIN_DOWN;
       power += (target - power) * Math.min(rate * dt, 1);
@@ -188,7 +209,7 @@ export function TextVortex({ className }: { className?: string }) {
       draw();
 
       /* At rest the image is fixed, so stop drawing until something changes. */
-      if (power === 0 && target === 0) {
+      if (power === 0 && target === 0 && intro === 1) {
         frame = 0;
         return;
       }
@@ -206,7 +227,11 @@ export function TextVortex({ className }: { className?: string }) {
 
     resize();
     draw();
-    if (reduced) return;
+    /* Run the entrance; the loop parks itself once the field settles. */
+    if (!reduced) {
+      last = performance.now();
+      frame = requestAnimationFrame(loop);
+    }
 
     const observer = new ResizeObserver(() => {
       resize();

@@ -1,4 +1,4 @@
-import { FadeReveal, RiseReveal, STEP } from "@/components/motion/reveal";
+import { FadeReveal, LEAD, RiseReveal, STEP } from "@/components/motion/reveal";
 import { TextVortex } from "@/components/motion/text-vortex";
 import { SpecStrip } from "@/components/motion/spec-strip";
 import { SplitButton } from "@/components/ui/split-button";
@@ -29,20 +29,20 @@ export function HeroSection({ nextSectionId }: { nextSectionId: string }) {
       <div className="flex flex-col gap-48 px-16 pt-160 pb-48 lg:col-span-5 lg:justify-center lg:pt-64 lg:pr-0 lg:pl-80">
         <div className="my-auto">
           <FadeReveal
-            delay={0}
+            delay={LEAD}
             className="mb-20 font-mono text-caption-20 uppercase"
           >
             Built for agentic development.
           </FadeReveal>
 
-          <FadeReveal delay={STEP} className="mb-32">
+          <FadeReveal delay={LEAD + STEP} className="mb-32">
             <h1 className="text-balance font-medium text-headline-20">
               The Sanity setup agents don&rsquo;t reinvent.
             </h1>
           </FadeReveal>
 
           <FadeReveal
-            delay={STEP * 2}
+            delay={LEAD + STEP * 2}
             className="w-full text-body-20 text-dark-grey"
           >
             <p>
@@ -52,7 +52,7 @@ export function HeroSection({ nextSectionId }: { nextSectionId: string }) {
             </p>
           </FadeReveal>
 
-          <RiseReveal delay={STEP * 3} className="mt-32">
+          <RiseReveal delay={LEAD + STEP * 3} className="mt-32">
             <SplitButton href="#pricing" leading="Get" trailing="access" ping />
           </RiseReveal>
         </div>
