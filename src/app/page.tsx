@@ -1,5 +1,6 @@
 import { HeroSection } from "@/components/sections/hero-section";
 import { TextTerminalSection } from "@/components/sections/text-terminal-section";
+import { IdeSection } from "@/components/sections/ide-section";
 import { SiteHeader } from "@/components/ui/site-header";
 import { LearnMoreDrawer } from "@/components/ui/learn-more-drawer";
 
@@ -10,6 +11,8 @@ export default function Home() {
       <LearnMoreDrawer />
       <HeroSection nextSectionId="text-terminal" />
       <TextTerminalSection id="text-terminal" />
+      {/* Section 3 (benefits) intentionally skipped for now. */}
+      <IdeSection id="the-repo" />
     </main>
   );
 }
