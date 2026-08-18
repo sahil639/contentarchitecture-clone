@@ -1,4 +1,5 @@
 import { HeroSection } from "@/components/sections/hero-section";
+import { TextTerminalSection } from "@/components/sections/text-terminal-section";
 import { SiteHeader } from "@/components/ui/site-header";
 import { LearnMoreDrawer } from "@/components/ui/learn-more-drawer";
 
@@ -8,16 +9,7 @@ export default function Home() {
       <SiteHeader />
       <LearnMoreDrawer />
       <HeroSection nextSectionId="text-terminal" />
-
-      {/* Placeholder so the scroll cue has somewhere to go. */}
-      <section
-        id="text-terminal"
-        className="flex min-h-svh items-center justify-center bg-black"
-      >
-        <p className="font-mono text-caption-10 uppercase text-dark-grey">
-          Next section
-        </p>
-      </section>
+      <TextTerminalSection id="text-terminal" />
     </main>
   );
 }
