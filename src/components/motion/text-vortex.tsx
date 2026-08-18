@@ -11,9 +11,8 @@ import { useEffect, useRef } from "react";
  * words. Neighbouring rings turn in opposite directions, which keeps the whole
  * thing alive without any one ring appearing to lead.
  *
- * Pressing and holding drives it faster and brighter; releasing sends a ripple
- * out from the centre. A soft circular hole follows the pointer, cutting the
- * glyphs away around the cursor.
+ * Pressing and holding drives it faster and brighter. A hard-edged circular
+ * hole follows the pointer, cutting the glyphs away around the cursor.
  *
  * Rendering: the glyphs are rasterised once into two offscreen layers — even
  * rings in one, odd in the other — and each frame only rotates those two
@@ -28,17 +27,29 @@ import { useEffect, useRef } from "react";
 const PHRASE = "THE CONTENT ARCHITECTURE";
 
 /* Ring count sets how tight the concentric spacing reads. */
-const RING_COUNT = 30;
-/* Radii as a fraction of the panel's half-diagonal, so coverage holds at any aspect. */
-const R_MIN = 0.055;
+const RING_COUNT = 26;
+/*
+ * Radii as a fraction of the panel's half-diagonal, so coverage holds at any
+ * aspect. R_MIN is set so the innermost ring is still legible text around a
+ * clear centre, rather than collapsing into unreadable mush.
+ */
+const R_MIN = 0.09;
 const R_MAX = 1.6;
 
 /* Font size as a fraction of ring radius; rings below the legible floor are dropped. */
 const FONT_RATIO = 0.068;
-const LEGIBLE_FLOOR_PX = 7.5;
+const LEGIBLE_FLOOR_PX = 9;
 
-/* Dots bridging the arc between phrase repetitions. */
-const DOT_RUN = 7;
+/*
+ * Dots bridging the arc between phrase repetitions. The run length grows toward
+ * the rim, so outer rings read mostly as dotted rule with occasional text while
+ * inner rings stay dense with words.
+ */
+const DOT_RUN_MIN_INNER = 2;
+const DOT_RUN_MIN_OUTER = 14;
+/* Extra dots drawn at random on top of the minimum, breaking up the spacing. */
+const DOT_RUN_SPREAD_INNER = 3;
+const DOT_RUN_SPREAD_OUTER = 20;
 const DOT_PITCH_EM = 0.62;
 const DOT_RADIUS_EM = 0.048;
 
@@ -59,11 +70,6 @@ const INTRO_DELAY_S = 0.28;
 
 /* Pointer hole. */
 const HOLE_PX = 104;
-const HOLE_FEATHER = 0.55;
-
-/* Ripple released on pointer-up. */
-const RIPPLE_S = 1.25;
-const RIPPLE_BAND_PX = 90;
 
 const BG = "#232323";
 const DOT_GRID_SPACING = 24;
@@ -110,7 +116,6 @@ export function TextVortex({ className }: { className?: string }) {
     let angle = 0;
     let intro = reduced ? 1 : 0;
     let elapsed = 0;
-    const ripples: number[] = [];
 
     let held = false;
     let hovering = false;
@@ -131,22 +136,49 @@ export function TextVortex({ className }: { className?: string }) {
       const dotRadius = Math.max(0.6, fontSize * DOT_RADIUS_EM);
 
       /*
-       * Build one repetition as a token list, then repeat it as many whole
-       * times as fit and distribute the remainder so the seam is invisible.
+       * Build the whole ring as one token list rather than repeating a fixed
+       * unit. Each phrase is followed by a gap of random length, so text lands
+       * at irregular angles and neighbouring rings never line up into the
+       * radial seams a constant unit produces.
        */
       type Token = { kind: "char"; ch: string; w: number } | { kind: "dot"; w: number };
-      const unit: Token[] = [];
-      for (const ch of PHRASE) {
-        if (ch === " ") unit.push({ kind: "dot", w: dotPitch });
-        else unit.push({ kind: "char", ch, w: c.measureText(ch).width });
-      }
-      for (let i = 0; i < DOT_RUN; i++) unit.push({ kind: "dot", w: dotPitch });
+      const tokens: Token[] = [];
 
-      const unitWidth = unit.reduce((s, t) => s + t.w, 0);
+      /* 0 at the centre, 1 at the rim. */
+      const t = ringIndex / (RING_COUNT - 1);
+      const gapMin = Math.round(
+        DOT_RUN_MIN_INNER + (DOT_RUN_MIN_OUTER - DOT_RUN_MIN_INNER) * t,
+      );
+      const gapSpread = Math.round(
+        DOT_RUN_SPREAD_INNER + (DOT_RUN_SPREAD_OUTER - DOT_RUN_SPREAD_INNER) * t,
+      );
+
       const circumference = 2 * Math.PI * radius;
-      const reps = Math.max(1, Math.round(circumference / unitWidth));
-      /* Scale advances slightly so an exact number of repetitions closes the ring. */
-      const fit = circumference / (reps * unitWidth);
+      let laid = 0;
+      let rep = 0;
+      while (laid < circumference) {
+        for (const ch of PHRASE) {
+          if (ch === " ") {
+            tokens.push({ kind: "dot", w: dotPitch });
+            laid += dotPitch;
+          } else {
+            const w = c.measureText(ch).width;
+            tokens.push({ kind: "char", ch, w });
+            laid += w;
+          }
+        }
+        const gap = gapMin + Math.floor(hash(ringIndex, 5000 + rep) * gapSpread);
+        for (let i = 0; i < gap; i++) {
+          tokens.push({ kind: "dot", w: dotPitch });
+          laid += dotPitch;
+        }
+        rep += 1;
+      }
+
+      /* Scale advances so the assembled run closes the ring exactly. */
+      const fit = circumference / laid;
+      /* Random start angle, so rings do not share a common origin. */
+      const startTheta = hash(ringIndex, 77) * Math.PI * 2;
 
       c.fillStyle = "#ffffff";
       c.textAlign = "center";
@@ -154,37 +186,35 @@ export function TextVortex({ className }: { className?: string }) {
 
       let travelled = 0;
       let n = 0;
-      for (let r = 0; r < reps; r++) {
-        for (const token of unit) {
-          const w = token.w * fit;
-          const theta = (travelled + w / 2) / radius;
-          travelled += w;
-          n += 1;
+      for (const token of tokens) {
+        const w = token.w * fit;
+        const theta = startTheta + (travelled + w / 2) / radius;
+        travelled += w;
+        n += 1;
 
-          if (token.kind === "char" && hash(ringIndex, n) < DROPOUT) continue;
+        if (token.kind === "char" && hash(ringIndex, n) < DROPOUT) continue;
 
-          c.save();
-          c.translate(cx, cy);
-          /*
-           * Negative, so successive characters advance rightward along the
-           * bottom of the ring. Rotating the other way lays the phrase out
-           * back to front.
-           */
-          c.rotate(-theta);
-          /* Sits at the bottom of the circle, so glyph up-vectors point inward. */
-          c.translate(0, radius);
+        c.save();
+        c.translate(cx, cy);
+        /*
+         * Negative, so successive characters advance rightward along the
+         * bottom of the ring. Rotating the other way lays the phrase out
+         * back to front.
+         */
+        c.rotate(-theta);
+        /* Sits at the bottom of the circle, so glyph up-vectors point inward. */
+        c.translate(0, radius);
 
-          if (token.kind === "dot") {
-            c.globalAlpha = 0.5;
-            c.beginPath();
-            c.arc(0, 0, dotRadius, 0, Math.PI * 2);
-            c.fill();
-            c.globalAlpha = 1;
-          } else {
-            c.fillText(token.ch, 0, 0);
-          }
-          c.restore();
+        if (token.kind === "dot") {
+          c.globalAlpha = 0.5;
+          c.beginPath();
+          c.arc(0, 0, dotRadius, 0, Math.PI * 2);
+          c.fill();
+          c.globalAlpha = 1;
+        } else {
+          c.fillText(token.ch, 0, 0);
         }
+        c.restore();
       }
     };
 
@@ -270,47 +300,18 @@ export function TextVortex({ className }: { className?: string }) {
       }
       fc.globalAlpha = 1;
 
-      /* Ripples brighten a band travelling outward from the centre. */
-      if (ripples.length) {
-        fc.save();
-        fc.globalCompositeOperation = "lighter";
-        for (const t of ripples) {
-          const p = t / RIPPLE_S;
-          const radius = p * Math.hypot(width, height) * 0.75;
-          const alpha = (1 - p) ** 2 * 0.5;
-          const grad = fc.createRadialGradient(
-            cx,
-            cy,
-            Math.max(0, radius - RIPPLE_BAND_PX),
-            cx,
-            cy,
-            radius + RIPPLE_BAND_PX,
-          );
-          grad.addColorStop(0, "rgba(255,255,255,0)");
-          grad.addColorStop(0.5, `rgba(255,255,255,${alpha})`);
-          grad.addColorStop(1, "rgba(255,255,255,0)");
-          fc.fillStyle = grad;
-          fc.fillRect(0, 0, width, height);
-        }
-        fc.restore();
-      }
-
-      /* Punch the pointer hole out of the glyph layer only. */
+      /*
+       * Punch the pointer hole out of the glyph layer only. A hard-edged disc,
+       * so the cut reads as a clean circle rather than a soft vignette; canvas
+       * antialiasing keeps the rim smooth on its own.
+       */
       if (hovering) {
         fc.save();
         fc.globalCompositeOperation = "destination-out";
-        const grad = fc.createRadialGradient(
-          pointer.x,
-          pointer.y,
-          HOLE_PX * HOLE_FEATHER,
-          pointer.x,
-          pointer.y,
-          HOLE_PX,
-        );
-        grad.addColorStop(0, "rgba(0,0,0,1)");
-        grad.addColorStop(1, "rgba(0,0,0,0)");
-        fc.fillStyle = grad;
-        fc.fillRect(0, 0, width, height);
+        fc.fillStyle = "#000";
+        fc.beginPath();
+        fc.arc(pointer.x, pointer.y, HOLE_PX, 0, Math.PI * 2);
+        fc.fill();
         fc.restore();
       }
 
@@ -336,11 +337,6 @@ export function TextVortex({ className }: { className?: string }) {
 
       angle += (IDLE_SPIN + (HELD_SPIN - IDLE_SPIN) * power) * dt;
 
-      for (let i = ripples.length - 1; i >= 0; i--) {
-        ripples[i] += dt;
-        if (ripples[i] >= RIPPLE_S) ripples.splice(i, 1);
-      }
-
       draw();
       frame = requestAnimationFrame(loop);
     };
@@ -358,10 +354,7 @@ export function TextVortex({ className }: { className?: string }) {
     };
     const onLeave = () => {
       hovering = false;
-      if (held) {
-        held = false;
-        ripples.push(0);
-      }
+      held = false;
       setLabel(null);
     };
     const onMove = (e: PointerEvent) => {
@@ -381,7 +374,6 @@ export function TextVortex({ className }: { className?: string }) {
     const onUp = () => {
       if (!held) return;
       held = false;
-      ripples.push(0);
       setLabel(hovering ? "CLICK & HOLD" : null);
     };
 
