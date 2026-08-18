@@ -57,7 +57,7 @@ function Contents({ onJump }: { onJump: (id: string) => void }) {
   return (
     <nav
       aria-label="Contents"
-      className="pointer-events-auto w-[240px] max-w-[38vw] overflow-hidden rounded-8 bg-off-white p-12 shadow-lg"
+      className="pointer-events-auto w-[240px] max-w-[38vw] overflow-hidden rounded-8 bg-mid-grey p-12 text-black shadow-lg"
     >
       <ul className="flex flex-col gap-6">
         {README_SECTIONS.map((section) => (
@@ -131,17 +131,21 @@ export function ReadmeOverlay({
 
           {/* Contents card, tucked against the panel's left shoulder. */}
           <motion.div
-            className="pointer-events-none absolute top-16 right-[calc(var(--readme-w)+var(--spacing)*24)] hidden lg:block"
+            className="pointer-events-none absolute top-16 right-[calc(var(--readme-w)+var(--spacing)*16)] hidden items-center lg:flex"
             initial={reduced ? { opacity: 1 } : { opacity: 0, y: -12 }}
             animate={{ opacity: 1, y: 0 }}
             exit={reduced ? { opacity: 0 } : { opacity: 0, y: -12 }}
             transition={{ duration: 0.35, delay: 0.08, ease: EASE }}
           >
             <Contents onJump={jump} />
+            {/* Joins the card to the panel, so the pair reads as one surface. */}
+            <span className="text-mid-grey">
+              <Connector orientation="vertical" length={72} />
+            </span>
           </motion.div>
 
           <motion.div
-            className="absolute inset-y-16 right-16 flex w-[var(--readme-w)] max-w-[calc(100%-var(--spacing)*32)] flex-col overflow-hidden rounded-8 bg-off-white text-black shadow-lg"
+            className="absolute inset-y-16 right-16 flex w-[var(--readme-w)] max-w-[calc(100%-var(--spacing)*32)] flex-col overflow-hidden rounded-8 bg-mid-grey text-black shadow-lg"
             initial={reduced ? { opacity: 1 } : { opacity: 0, x: 32 }}
             animate={{ opacity: 1, x: 0 }}
             exit={reduced ? { opacity: 0 } : { opacity: 0, x: 32 }}

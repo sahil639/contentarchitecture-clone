@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, useReducedMotion } from "motion/react";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 /*
  * Entrance reveals.
@@ -63,11 +63,22 @@ export function RiseReveal({
 }) {
   const reduced = useReducedMotion();
   /*
-   * The mask is only needed while the child is sliding up through it. Left in
-   * place afterwards it clips anything that overflows the child's box — the
-   * button's status dot and its shadow — so it is dropped once the wipe ends.
+   * The mask is only needed while the child is sliding up through it. Its
+   * bottom edge sits exactly on the child's, so left in place it shaves the
+   * child's lower corners and shadow — hence dropping it once the wipe ends.
+   *
+   * Cleared on a timer as well as on the animation callback: the callback does
+   * not fire if the animation never runs to completion, and a permanently
+   * clipped control is a worse failure than dropping the mask a frame early.
    */
   const [wiping, setWiping] = useState(!reduced);
+
+  useEffect(() => {
+    if (!wiping) return;
+    const ms = (delay + DURATION) * 1000 + 120;
+    const timer = setTimeout(() => setWiping(false), ms);
+    return () => clearTimeout(timer);
+  }, [wiping, delay]);
 
   return (
     <div
