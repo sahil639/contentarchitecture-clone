@@ -22,15 +22,18 @@ export function Panel({
   children,
   className,
   innerClassName,
+  frame = "p-6 lg:p-8",
 }: {
   children: ReactNode;
   className?: string;
   innerClassName?: string;
+  /** Padding utilities setting the texture band's width. */
+  frame?: string;
 }) {
   return (
     <div
       style={HALFTONE}
-      className={`rounded-8 bg-black-deep p-6 shadow-lg ring ring-black-deep lg:p-8 ${className ?? ""}`}
+      className={`rounded-8 bg-black-deep shadow-lg ring ring-black-deep ${frame} ${className ?? ""}`}
     >
       <div className={`overflow-hidden rounded-4 bg-black-deep ${innerClassName ?? ""}`}>
         {children}

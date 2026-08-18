@@ -27,7 +27,7 @@ export function Marquee({ children }: { children: string }) {
      * widening a w-fit parent: the box contributes nothing to max-content,
      * then stretches back to the width the parent settled on.
      */
-    <div className="relative flex w-0 min-w-full overflow-hidden bg-white font-mono text-ui uppercase text-black">
+    <div className="relative flex w-0 min-w-full overflow-hidden bg-white font-mono text-caption-10 uppercase text-black">
       <span className="sr-only">{children}</span>
       <div
         aria-hidden="true"

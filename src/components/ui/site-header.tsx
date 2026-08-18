@@ -32,9 +32,9 @@ function Mark() {
   return (
     <span
       aria-hidden="true"
-      className="flex size-22 shrink-0 items-center justify-center rounded-2 bg-white/10"
+      className="flex size-26 shrink-0 items-center justify-center rounded-2 bg-white/10"
     >
-      <svg viewBox="0 0 24 24" className="size-16" fill="none">
+      <svg viewBox="0 0 24 24" className="size-20" fill="none">
         <title>Mark</title>
         {Array.from({ length: RAYS }, (_, i) => {
           const r = 3 + i * 2.4;
@@ -57,25 +57,25 @@ export function SiteHeader() {
   return (
     <header className="pointer-events-none fixed inset-x-0 top-0 z-4 flex justify-start p-8 lg:justify-center lg:p-16">
       {/* w-fit so the pill hugs the nav row; the marquee below is clipped to that width. */}
-      <Panel className="pointer-events-auto w-fit max-w-full">
+      <Panel frame="p-7 lg:p-10" className="pointer-events-auto w-fit max-w-full">
         <nav aria-label="Primary">
-          <div className="flex items-center gap-10 px-8 py-5 lg:gap-18 lg:px-10">
+          <div className="flex items-center gap-12 px-10 py-6 lg:gap-22 lg:px-12">
           <Link href="/" aria-label="Home">
             <Mark />
           </Link>
 
-          <ul className="flex items-center gap-12 lg:gap-18">
+          <ul className="flex items-center gap-14 lg:gap-22">
             {NAV.map((item) => (
               <li key={item.label}>
                 <Link
                   href={item.href}
-                  className="relative inline-flex font-mono text-ui uppercase text-off-white/80 transition-colors hover:text-off-white [--odometer-progress:0] motion-safe:hover:[--odometer-progress:1]"
+                  className="relative inline-flex font-mono text-caption-10 uppercase text-off-white/80 transition-colors hover:text-off-white [--odometer-progress:0] motion-safe:hover:[--odometer-progress:1]"
                 >
                   <OdometerText>{item.label}</OdometerText>
                   {item.accent && (
                     <span
                       aria-hidden="true"
-                      className="absolute -top-1 -right-5 size-3 rounded-full bg-accent"
+                      className="absolute -top-1 -right-6 size-4 rounded-full bg-accent"
                     />
                   )}
                 </Link>
