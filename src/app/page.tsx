@@ -2,6 +2,7 @@ import { HeroSection } from "@/components/sections/hero-section";
 import { TextTerminalSection } from "@/components/sections/text-terminal-section";
 import { IdeSection } from "@/components/sections/ide-section";
 import { PricingSection } from "@/components/sections/pricing-section";
+import { CalloutSection } from "@/components/sections/callout-section";
 import { SiteHeader } from "@/components/ui/site-header";
 import { LearnMoreDrawer } from "@/components/ui/learn-more-drawer";
 
@@ -16,6 +17,8 @@ export default function Home() {
       <IdeSection id="the-repo" />
       {/* Section 5 (showcase) intentionally skipped for now. */}
       <PricingSection id="pricing" />
+      {/* Sections 7 (testimonials/FAQ) intentionally skipped for now. */}
+      <CalloutSection id="callout" />
     </main>
   );
 }
